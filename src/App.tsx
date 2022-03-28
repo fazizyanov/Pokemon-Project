@@ -1,43 +1,48 @@
-import { FC, useEffect, useState, createContext } from "react";
-
+import { FC, useEffect, useReducer } from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
 import axios from "axios";
 
-import PokemonList from "./Page/PokemonList";
-import PokemonDescription from "./Page/PokemonDescription";
+import { contextReducer, initialState, MyContext } from "./services/reducer";
+
+import PokemonsList from "./pages/PokemonsList";
+import PokemonDescription from "./pages/PokemonDescription";
 
 import "./App.css";
 
-export const MyContext = createContext([]);
+type Url = { url: string };
 
 const App: FC = () => {
-  const [pokemonData, setPokemonData] = useState([]);
+  const [state, dispatch] = useReducer(contextReducer, initialState);
 
-  const getPokemon = async () => {
-    const result = await axios.get(
-      "https://pokeapi.co/api/v2/pokemon?limit=16&offset=16"
-    );
-    const urls = result.data.results.map(({ url }: any) => axios.get(url));
+  let urlPages = "https://pokeapi.co/api/v2/pokemon?limit=12&offset=0";
+
+  const getPokemons = async (urlPages: string): Promise<any> => {
+    const result = await axios.get(`${urlPages}`);
+    dispatch({ type: "NEXT_PAGE", payload: result.data.next });
+    dispatch({ type: "PREV_PAGE", payload: result.data.previous });
+    const urls = result.data.results.map(({ url }: Url) => axios.get(url));
     const results = await axios.all(urls);
-    const pokemonData: any = results.map(
+    const pokemonsData: any = results.map(
       ({ data: { name, id, sprites } }: any) => ({
         name,
         id,
         img: sprites.back_default,
       })
     );
-    setPokemonData(pokemonData);
+    dispatch({ type: "CONTEXT_UPDATE", payload: pokemonsData });
   };
 
   useEffect(() => {
-    getPokemon();
+    getPokemons(urlPages);
   }, []);
 
   return (
     <div className="App">
-      <MyContext.Provider value={pokemonData}>
+      <MyContext.Provider value={state}>
         <Switch>
-          <Route path="/pokemon-list" component={PokemonList} />
+          <Route path="/pokemon-list">
+            <PokemonsList getPokemons={getPokemons} />
+          </Route>
           <Route path="/pokemon-description" component={PokemonDescription} />
           <Redirect path="/" to="/pokemon-list" />
         </Switch>
