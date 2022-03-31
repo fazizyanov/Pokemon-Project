@@ -1,18 +1,25 @@
-import { FC, useCallback, useContext, useReducer } from "react";
+import { FC, useCallback, useContext } from "react";
 import { Button, Grid } from "@mui/material";
 
 import { MyContext } from "../../services/reducer";
 
 import PokemonCard from "../../components/PokemonCard";
+import { PokemonData } from "../../App";
 
-const PokemonsList: FC<any> = ({ getPokemons }) => {
-  const { pokemons, next, prev }: any = useContext(MyContext);
+interface PropsPokemonsList {
+  getPokemons: (arg: string) => void;
+}
+
+const PokemonsList: FC<PropsPokemonsList> = ({ getPokemons }) => {
+  const { pokemons, next, prev } = useContext(MyContext);
 
   const handleClickPrevButton = useCallback(() => {
+    if (typeof prev !== "string") return;
     getPokemons(prev);
   }, [prev]);
 
   const handleClickNextButton = useCallback(() => {
+    if (typeof next !== "string") return;
     getPokemons(next);
   }, [next]);
 
@@ -20,7 +27,7 @@ const PokemonsList: FC<any> = ({ getPokemons }) => {
     <>
       <Grid container spacing={2}>
         {pokemons?.length > 0 &&
-          pokemons.map((item: any) => (
+          pokemons.map((item: PokemonData) => (
             <Grid key={item.id} item xs={2}>
               <PokemonCard id={item.id} image={item.img} name={item.name} />
             </Grid>

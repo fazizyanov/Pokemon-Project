@@ -13,7 +13,7 @@ export interface PokemonData {
 const PokemonDescription: FC = () => {
   const location = useLocation();
   const history = useHistory();
-  const { pokemons }: any = useContext(MyContext);
+  const { pokemons } = useContext(MyContext);
 
   const pokemonId = queryString.parse(location.search);
 
@@ -24,7 +24,7 @@ const PokemonDescription: FC = () => {
   const pokemonDescription = useMemo(
     () =>
       pokemons.find((item: PokemonData) => item.id === Number(pokemonId.id)),
-    [pokemons]
+    [pokemons, pokemonId.id]
   );
 
   return (

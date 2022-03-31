@@ -8,32 +8,58 @@ import PokemonsList from "./pages/PokemonsList";
 import PokemonDescription from "./pages/PokemonDescription";
 
 import "./App.css";
+import pokemonsActions from "./services/actions";
 
 type Url = { url: string };
+
+export interface DestructurizationFetchData {
+  data: {
+    name: string;
+    id: number;
+    sprites: { front_default: string };
+    img: string;
+  };
+}
+
+export interface PokemonData {
+  name: string;
+  id: number;
+  img: string;
+}
+
+interface FetchData {
+  next: string;
+  previous: string;
+  results: {
+    name: string;
+    url: string;
+  }[];
+}
+
+const baseUrl = "https://pokeapi.co/api/v2/pokemon?limit=12&offset=0";
 
 const App: FC = () => {
   const [state, dispatch] = useReducer(contextReducer, initialState);
 
-  let urlPages = "https://pokeapi.co/api/v2/pokemon?limit=12&offset=0";
-
-  const getPokemons = async (urlPages: string): Promise<any> => {
-    const result = await axios.get(`${urlPages}`);
-    dispatch({ type: "NEXT_PAGE", payload: result.data.next });
-    dispatch({ type: "PREV_PAGE", payload: result.data.previous });
+  const getPokemons = async (urlPages: string = baseUrl): Promise<void> => {
+    const result = await axios.get<FetchData>(`${urlPages}`);
+    const { next, previous } = result.data;
+    dispatch(pokemonsActions.nextPage(next));
+    dispatch(pokemonsActions.prevPage(previous));
     const urls = result.data.results.map(({ url }: Url) => axios.get(url));
     const results = await axios.all(urls);
-    const pokemonsData: any = results.map(
-      ({ data: { name, id, sprites } }: any) => ({
+    const pokemonsData: PokemonData[] = results.map(
+      ({ data: { name, id, sprites } }: DestructurizationFetchData) => ({
         name,
         id,
-        img: sprites.back_default,
+        img: sprites.front_default,
       })
     );
-    dispatch({ type: "CONTEXT_UPDATE", payload: pokemonsData });
+    dispatch(pokemonsActions.pokemonsAction(pokemonsData));
   };
 
   useEffect(() => {
-    getPokemons(urlPages);
+    getPokemons();
   }, []);
 
   return (

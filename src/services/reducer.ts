@@ -1,24 +1,38 @@
 import { createContext } from "react";
-export const MyContext = createContext([]);
+import { PokemonData } from "../App";
+import {
+  NextPageAction,
+  PokemonsAction,
+  pokemonsTypes,
+  PrevPageAction,
+} from "./actions";
 
-export const initialState = {
+export interface PokemonsData {
+  pokemons: PokemonData[] | [];
+  next: string | any | null;
+  prev: string | any | null;
+}
+
+export const initialState: PokemonsData = {
   pokemons: [],
-  next: "",
-  prev: "",
+  next: null,
+  prev: null,
 };
 
+export const MyContext = createContext<PokemonsData>(initialState);
+
 export const contextReducer = (
-  initialState: any,
-  action: { type: any; payload: any }
-) => {
+  state: PokemonsData,
+  action: PrevPageAction | NextPageAction | PokemonsAction
+): PokemonsData => {
   switch (action.type) {
-    case "CONTEXT_UPDATE":
-      return { ...initialState, pokemons: action.payload };
-    case "NEXT_PAGE":
-      return { ...initialState, next: action.payload };
-    case "PREV_PAGE":
-      return { ...initialState, prev: action.payload };
+    case pokemonsTypes.CONTEXT_UPDATE:
+      return { ...state, pokemons: action.payload };
+    case pokemonsTypes.NEXT_PAGE:
+      return { ...state, next: action.payload };
+    case pokemonsTypes.PREV_PAGE:
+      return { ...state, prev: action.payload };
     default:
-      return initialState;
+      return state;
   }
 };
